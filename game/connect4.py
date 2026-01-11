@@ -1,13 +1,15 @@
 from tqdm import tqdm
 from board import Board, PLAYER_ONE, PLAYER_TWO
-from players_connect4 import RandomPlayerCF, HumanPlayerCF, HeuristicPlayer
+from players_connect4 import RandomPlayerCF, HumanPlayerCF, HeuristicPlayer, LookAheadheuristicPlayer, CustomLookAheadheuristicPlayer
 import time 
 import numpy as np
 
 _player_categories = {
     'human_user' : HumanPlayerCF,
     'random_player' : RandomPlayerCF,
-    'heuristic_player' : HeuristicPlayer
+    'heuristic_player' : HeuristicPlayer,
+    'lookaheadheuristic_player' : LookAheadheuristicPlayer,
+    'customlookaheadheuristic_player' : CustomLookAheadheuristicPlayer
 }
 
 class Connect4:
@@ -101,5 +103,9 @@ class GameSessionCF:
         }
 
 if __name__ == "__main__":
-    game = Connect4(player_one="human_user", player_two="heuristic_player", display_board=True)
+    game = Connect4(player_one="human_user", player_two="customlookaheadheuristic_player", display_board=True)
     game.playGame()
+
+    #gamesession = GameSessionCF(player_one="lookaheadheuristic_player", player_two="customlookaheadheuristic_player", number_of_games=100)
+    #gamesession.start()
+    #print(gamesession.getStats())
