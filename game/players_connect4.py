@@ -242,7 +242,7 @@ class DeepReenforcementLearningPlayer:
     def _board_to_state(self, board:Board):
         #Convertir le board en un format compris par le réseau de neurones
         equiv_board = utils.equivalent_board_representation_cf(board=board)
-        flatten_board = np.array(equiv_board).flatten() #On applatit en un tableau plat de 6*7 soit 42 éléments
+        flatten_board = np.array(equiv_board.board).flatten() #On applatit en un tableau plat de 6*7 soit 42 éléments
 
         #np.where(condition, valeur_si_vrai, valeur_si_faux)
         return np.where(flatten_board == PLAYER_ONE, 1, np.where(flatten_board == PLAYER_TWO, -1, 0)) #Cette ligne transforme le plateau de jeu en valeurs numériques pour le réseau de neurones
@@ -268,7 +268,7 @@ class DeepReenforcementLearningPlayer:
                 next_state = self._board_to_state(board=board)
 
                 #Undo the move
-                board.board[row][col] = EMPTY_CELL
+                board.board[col][row] = EMPTY_CELL
                 board.next_player()
 
                 if self.training_mode:
@@ -278,17 +278,17 @@ class DeepReenforcementLearningPlayer:
                     else:
                         reward = 0
 
-                self.replay_buffer.add_experience(
-                    state=current_state,
-                    action=(row, col),
-                    reward=reward,
-                    next_state=next_state,
-                    done=True
-                )
+                    self.replay_buffer.add_experience(
+                        state=current_state,
+                        action=(row, col),
+                        reward=reward,
+                        next_state=next_state,
+                        done=True
+                    )
                 return row, col
             else:
                 #Undo the move
-                board.board[row][col] = EMPTY_CELL
+                board.board[col][row] = EMPTY_CELL
                 board.next_player()
 
         #Choisir un mouvement avec une stratégie epsilon-greedy
@@ -304,9 +304,9 @@ class DeepReenforcementLearningPlayer:
                 board.play_move(row=row, col=col)
                 board.next_player()
 
-                score = self._minimax(board=board, depth=0, is_maximizing=False)
+                score = self._minimax(board=board, depth=0, is_maximazing=False)
 
-                board.board[row][col] = EMPTY_CELL
+                board.board[col][row] = EMPTY_CELL
                 board.next_player()
 
                 if score > best_score:
@@ -320,7 +320,7 @@ class DeepReenforcementLearningPlayer:
             board.next_player()
             next_state = self._board_to_state(board=board)
 
-            board.board[row][col] = EMPTY_CELL
+            board.board[col][row] = EMPTY_CELL
             board.next_player()
 
             reward = 0
@@ -353,11 +353,11 @@ class DeepReenforcementLearningPlayer:
             if self.position == PLAYER_ONE:
                 return score
             else:
-                return -1*score
+                return -1 * score
 
         #On avance dans l'arbre
         availaible_moves = utils.get_available_moves_cf(board=board)
-        best_score = float("-1") if is_maximazing else float("inf")
+        best_score = float("-inf") if is_maximazing else float("inf")
         for row, col in availaible_moves:
             board.play_move(row=row, col=col)
             board.next_player()
@@ -365,7 +365,7 @@ class DeepReenforcementLearningPlayer:
             score = self._minimax(board=board, depth=depth+1, is_maximazing=not is_maximazing)
             
             #On annule le coup
-            board.board[row][col] = EMPTY_CELL
+            board.board[col][row] = EMPTY_CELL
             board.next_player()
 
             #On garde le meilleure score en fonction qu'on cherche à maximiser ou minimiser
@@ -375,3 +375,42 @@ class DeepReenforcementLearningPlayer:
                 best_score = min(best_score, score)
 
         return best_score
+    
+    def update(self):
+        #On fait rien si on est pas en mode entrainement ou si le buffer n'est pas prêt
+        if not self.training_mode or not self.replay_buffer.is_ready():
+            return
+        
+        states, actions, rewards, next_states, dones = self.replay_buffer.sample_batch()
+        state_values = self.network.forward(input_matrix=states).flatten()
+        next_states_values = self.target_network.forward(input_matrix=next_states).flatten()
+        next_states_targets = rewards + self.gamma * (1 - dones) * next_states_values
+
+        #UPDATE TD formula
+        # V(s) = V(s) + alpha * (reward + gamma * next_value - V(s))
+        targets = state_values + self.alpha * (next_states_targets - state_values)
+
+        #Train the network on the sample experience
+        self.network.train(
+            inputs=states,
+            labels=targets,
+            with_dropout=True, 
+            silent=True
+        )
+
+        #On met à jour petit à petit le target network
+        self.steps_until_last_update += 1
+        if self.steps_until_last_update % self.update_target_every == 0:
+            #On met à jour
+            self._soft_update_target_network()
+            self.steps_until_last_update = 0
+    
+    def _soft_update_target_network(self, tau=0.1):
+        #Soft update target network weights
+
+        for i in range(len(self.network.weights)):
+            self.target_network.weights[i] = tau * self.network.weights[i] + (1 - tau) * self.target_network.weights[i]
+
+
+
+

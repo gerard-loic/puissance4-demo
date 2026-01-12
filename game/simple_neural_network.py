@@ -63,7 +63,7 @@ class SimpleNeuralNetwork:
 
     def save(self):
         #Sauvegarde dans un fichier
-        with open(self, self.file_name, 'wb') as f:
+        with open(self.file_name, 'wb') as f:
             for j in range(len(self.weights)):
                 pickle.dump(self.weights[j], f)
 
