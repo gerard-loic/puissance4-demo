@@ -4,6 +4,8 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import SGD
+from tensorflow.keras import mixed_precision
+mixed_precision.set_global_policy('mixed_float16')
 
 class TsSimpleNeuralNetwork:
     def __init__(self, input_shape:tuple, layer_sizes:list, activation_functions:list, with_dropout:bool, loss_fct:str='mse', metrics:list=['mae'], dropout_ratio:float=0.3, learning_rate:float=0.005):
@@ -44,8 +46,8 @@ class TsSimpleNeuralNetwork:
 
     def forward(self, input_data:np.ndarray):
 
-        if not isinstance(input_data, tf.Tensor):
-            input_data = tf.constant(input_data, dtype=tf.float32)
+        #if not isinstance(input_data, tf.Tensor):
+            #input_data = tf.constant(input_data, dtype=tf.float32)
         
         # ✅ Utilise la version compilée en graph
         output = self._forward_graph(input_data)
@@ -76,7 +78,7 @@ class TsSimpleNeuralNetwork:
                 labels, 
                 validation_data=(test_inputs, test_labels),
                 epochs=iterations,
-                batch_size=8, 
+                batch_size=64, 
                 verbose=verbose,
                 callbacks=callbacks
             )
@@ -85,7 +87,7 @@ class TsSimpleNeuralNetwork:
                 inputs, 
                 labels, 
                 epochs=iterations,
-                batch_size=8, 
+                batch_size=64, 
                 verbose=verbose,
                 callbacks=callbacks
             )

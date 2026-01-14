@@ -6,6 +6,7 @@ from simple_neural_network import SimpleNeuralNetwork
 from ts_simple_neural_network import TsSimpleNeuralNetwork
 import time
 import numpy as np
+import os
 
 _drl_player_training_mode = None
 _drl_player_network = None
@@ -176,8 +177,12 @@ class CustomLookAheadheuristicPlayer:
 
 
 class DRLPlayer(object):
+    @staticmethod
+    def setTrainingMode(actif:bool):
+        DRLPlayer.training_mode = actif
+    
     def __init__(self, position, max_depth=2, replay_buffer_max_size=5000, replay_batch_size=64,
-                 alpha_td=0.1, gamma=0.99, epsilon=0.1, training_mode=False,
+                 alpha_td=0.1, gamma=0.99, epsilon=0.1,
                  net_learning_rate=0.005, trained_network_file='../trained_networks/trained_drl_network.pkl', update_every=8,
                  ):
         self.position = position
@@ -190,12 +195,15 @@ class DRLPlayer(object):
         self.trained_network_file = trained_network_file
         self.trained_target_network_file = trained_network_file.replace('.pkl', '_target.pkl')
         self.replay_buffer = ReplayBuffer(max_size=replay_buffer_max_size, batch_size=replay_batch_size)
-
+        self.training_mode = False
         self.count = 0
 
-        global _drl_player_network, _drl_player_target_network, _drl_player_training_mode
-        if _drl_player_network is None or _drl_player_target_network is None or _drl_player_training_mode is None:
-            _drl_player_training_mode = training_mode
+        if hasattr(DRLPlayer, 'training_mode'):
+            self.training_mode = DRLPlayer.training_mode
+
+        global _drl_player_network, _drl_player_target_network
+        if _drl_player_network is None or _drl_player_target_network is None:
+        
             sizes = [6*7, 148, 96, 1]
             act_fns = ['relu', 'tanh', 'tanh']
             iterations = 160
@@ -205,12 +213,10 @@ class DRLPlayer(object):
             _drl_player_target_network = SimpleNeuralNetwork(layers_sizes=sizes, activation_functions=act_fns,
                                                              alpha=net_learning_rate, iterations=iterations, silent=True,
                                                              file_name=self.trained_target_network_file)
-        self.training_mode = _drl_player_training_mode
         self.network = _drl_player_network
         self.target_network = _drl_player_target_network
 
     def save_weights(self):
-        print("SAVE")
         global _time_last_updated
         now = time.time()
         if _time_last_updated is None or now - _time_last_updated >= 600:
@@ -363,8 +369,12 @@ class TsDRLPlayer(object):
             return TsDRLPlayer.cache[key]
         return None
 
+    @staticmethod
+    def setTrainingMode(actif:bool):
+        TsDRLPlayer.training_mode = actif
+
     def __init__(self, position, max_depth=2, replay_buffer_max_size=5000, replay_batch_size=64,
-                 alpha_td=0.1, gamma=0.99, epsilon=0.1, training_mode=False,
+                 alpha_td=0.1, gamma=0.99, epsilon=0.1,
                  net_learning_rate=0.005, trained_network_file='../trained_networks/trained_ts_drl_network.keras', update_every=8,
                  ):
         self.position = position
@@ -377,13 +387,15 @@ class TsDRLPlayer(object):
         self.trained_network_file = trained_network_file
         self.trained_target_network_file = trained_network_file.replace('.keras', '_target.keras')
         self.replay_buffer = ReplayBuffer(max_size=replay_buffer_max_size, batch_size=replay_batch_size)
-
+        self.training_mode = False
         self.count = 0
 
-        global _drl_player_network, _drl_player_target_network, _drl_player_training_mode
-        if _drl_player_network is None or _drl_player_target_network is None or _drl_player_training_mode is None:
-            _drl_player_training_mode = training_mode
+        if hasattr(TsDRLPlayer, 'training_mode'):
+            self.training_mode = TsDRLPlayer.training_mode
 
+        global _drl_player_network, _drl_player_target_network
+        if _drl_player_network is None or _drl_player_target_network is None:
+           
             _drl_player_network = TsSimpleNeuralNetwork(
                 input_shape=(6*7,),
                 layer_sizes=[148, 96, 1],
@@ -401,12 +413,19 @@ class TsDRLPlayer(object):
                 metrics=['mae']
             )
 
-        self.training_mode = _drl_player_training_mode
-        self.network = _drl_player_network
-        self.target_network = _drl_player_target_network
+            self.network = _drl_player_network
+            self.target_network = _drl_player_target_network
+
+            if os.path.isfile(self.trained_network_file):
+                self.network.load(file_path=self.trained_network_file)
+        else:
+            self.network = _drl_player_network
+            self.target_network = _drl_player_target_network
+
+
+        
 
     def save_weights(self):
-        print("SAVE")
         global _time_last_updated
         now = time.time()
         if _time_last_updated is None or now - _time_last_updated >= 600:

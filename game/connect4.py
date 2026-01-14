@@ -104,8 +104,8 @@ class GameSessionCF:
         }
 
 if __name__ == "__main__":
-    #game = Connect4(player_one="heuristic_player", player_two="lookaheadheuristic_player", display_board=True)
-    #game.playGame()
+    game = Connect4(player_one="human_user", player_two="drl_player", display_board=True)
+    game.playGame()
 
     #gamesession = GameSessionCF(player_one="lookaheadheuristic_player", player_two="drl_player", number_of_games=100)
     #gamesession.start()
@@ -128,10 +128,11 @@ if __name__ == "__main__":
     print("Training completed !")
     """
   
-    
+    """
     num_training_iterations = 20000
     games_per_iterations = 6
-    ts_drl_player = TsDRLPlayer(position=PLAYER_ONE, training_mode=True)
+    ts_drl_player = TsDRLPlayer(position=PLAYER_ONE)
+    TsDRLPlayer.setTrainingMode(actif=True)
     
     TsDRLPlayer.enableExperienceCache()
     for i in tqdm(range(1, num_training_iterations+1), desc='Training iterations'):
@@ -144,4 +145,4 @@ if __name__ == "__main__":
         ts_drl_player.save_weights()
         TsDRLPlayer.clearExperienceCache()
     print('Training is complete.')
-    
+    """
