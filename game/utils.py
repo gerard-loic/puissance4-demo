@@ -70,7 +70,7 @@ def get_available_moves_cf(board:Board):
                 break   #On a trouvé une position dans la colonne, donc on passe à la colonne suivante
     return availableMoves
 
-def equivalent_board_representation_cf(board:Board):
+def equivalent_board_representative_cf(board:Board):
     #Convert board to a numpy array
     #Dans les equivalences il n'y a que la symétrie
     equivalent_positions = set()
