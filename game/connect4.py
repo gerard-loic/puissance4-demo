@@ -1,6 +1,6 @@
 from tqdm import tqdm
 from board import Board, PLAYER_ONE, PLAYER_TWO
-from players_connect4 import RandomPlayerCF, HumanPlayerCF, HeuristicPlayer, LookAheadheuristicPlayer, CustomLookAheadheuristicPlayer, DRLPlayer
+from players_connect4 import RandomPlayerCF, HumanPlayerCF, HeuristicPlayer, LookAheadheuristicPlayer, CustomLookAheadheuristicPlayer, DRLPlayer, TsDRLPlayer
 import time 
 import numpy as np
 
@@ -10,7 +10,8 @@ _player_categories = {
     'heuristic_player' : HeuristicPlayer,
     'lookaheadheuristic_player' : LookAheadheuristicPlayer,
     'customlookaheadheuristic_player' : CustomLookAheadheuristicPlayer,
-    'drl_player' : DRLPlayer
+    'drl_player' : DRLPlayer,
+    'ts_drl_player' : TsDRLPlayer
 }
 
 class Connect4:
@@ -66,7 +67,6 @@ class Connect4:
             self.board.next_player()
 
 
-
 class GameSessionCF:
     def __init__(self, player_one:str, player_two:str, number_of_games:int=1, display_board:bool=False):
         self.player_one = player_one
@@ -107,9 +107,9 @@ if __name__ == "__main__":
     #game = Connect4(player_one="heuristic_player", player_two="lookaheadheuristic_player", display_board=True)
     #game.playGame()
 
-    gamesession = GameSessionCF(player_one="lookaheadheuristic_player", player_two="drl_player", number_of_games=100)
-    gamesession.start()
-    print(gamesession.getStats())
+    #gamesession = GameSessionCF(player_one="lookaheadheuristic_player", player_two="drl_player", number_of_games=100)
+    #gamesession.start()
+    #print(gamesession.getStats())
 
     #Training DRL_Player
     """
@@ -127,19 +127,21 @@ if __name__ == "__main__":
         drl_player.save_weights()
     print("Training completed !")
     """
-    """
+  
     
     num_training_iterations = 20000
     games_per_iterations = 6
-    drl_player = DRLPlayer(position=PLAYER_ONE, training_mode=True)
+    ts_drl_player = TsDRLPlayer(position=PLAYER_ONE, training_mode=True)
     
+    TsDRLPlayer.enableExperienceCache()
     for i in tqdm(range(1, num_training_iterations+1), desc='Training iterations'):
-        for _ in range(games_per_iterations):
-            game = Connect4(player_one='drl_player', player_two='drl_player', display_board=False)
+        for i in range(games_per_iterations):
+            game = Connect4(player_one='ts_drl_player', player_two='ts_drl_player', display_board=False)
             game.playGame()
     
-    #     # Train the networks and save the weights
-        drl_player.update()
-        drl_player.save_weights()
+        #Train the networks and save the weights
+        ts_drl_player.update()
+        ts_drl_player.save_weights()
+        TsDRLPlayer.clearExperienceCache()
     print('Training is complete.')
-    """
+    
