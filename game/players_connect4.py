@@ -418,6 +418,7 @@ class TsDRLPlayer(object):
 
             if os.path.isfile(self.trained_network_file):
                 self.network.load(file_path=self.trained_network_file)
+                self.target_network.load(file_path=self.trained_target_network_file)
         else:
             self.network = _drl_player_network
             self.target_network = _drl_player_target_network
@@ -652,7 +653,7 @@ class TsDRLPlayer(object):
         self.network.train(
             inputs=states,
             labels=targets,
-            iterations=1,
+            iterations=8,
             verbose=False
         )
 

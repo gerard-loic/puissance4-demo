@@ -104,10 +104,10 @@ class GameSessionCF:
         }
 
 if __name__ == "__main__":
-    game = Connect4(player_one="human_user", player_two="drl_player", display_board=True)
+    game = Connect4(player_one="human_user", player_two="ts_drl_player", display_board=True)
     game.playGame()
 
-    #gamesession = GameSessionCF(player_one="lookaheadheuristic_player", player_two="drl_player", number_of_games=100)
+    #gamesession = GameSessionCF(player_one="heuristic_player", player_two="ts_drl_player", number_of_games=100)
     #gamesession.start()
     #print(gamesession.getStats())
 
@@ -145,4 +145,6 @@ if __name__ == "__main__":
         ts_drl_player.save_weights()
         TsDRLPlayer.clearExperienceCache()
     print('Training is complete.')
+    
     """
+    
